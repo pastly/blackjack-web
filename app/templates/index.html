@@ -1,13 +1,6 @@
-<html>
-    <head>
-        {% if title %}
-        <title>{{ title }} - Blackjack</title>
-        {% else %}
-        <title>Welcome to Blackjack!</title>
-        {% endif %}
-    </head>
-    <body>
-        <h1>Hello, {{ user.username }}!</h1>
-        <p>i = {{ i }}</p>
-    </body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Hi, {{ user.username }}!</h1>
+    <p>i = {{ i }}</p>
+{% endblock %}
