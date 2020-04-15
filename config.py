@@ -16,3 +16,4 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'mNTYdSyk7278xjVku8WSactJ'
     SQLALCHEMY_DATABASE_URI = postgres_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    GOOGLE_ANALYTICS = os.environ.get('GOOGLE_ANALYTICS') or None

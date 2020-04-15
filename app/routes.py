@@ -6,10 +6,17 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
 
 
+def my_render_template(*a, **kw):
+    kw.update({
+        'google_analytics_id': app.config['GOOGLE_ANALYTICS'],
+    })
+    return render_template(*a, **kw)
+
+
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template('index.html', title='Home')
+    return my_render_template('index.html', title='Home')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -29,7 +36,7 @@ def login():
             # hostname, then default to this page
             next_page = url_for('index')
         return redirect(next_page)
-    return render_template('login.html', title='Sign In', form=form)
+    return my_render_template('login.html', title='Sign In', form=form)
 
 
 @app.route('/logout')
@@ -58,4 +65,4 @@ def register():
         db.session.commit()
         flash('You have registered! Now login.')
         return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
+    return my_render_template('register.html', title='Register', form=form)
