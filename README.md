@@ -1,9 +1,7 @@
 # Notes for deploying to AWS
 
-In a fresh virtualenv,
-install latest flask and gunicorn.
-
-Update `requirements.txt`:
+Whenever you install a new package into the virtualenv, update
+`requirements.txt`:
 
     pip freeze | grep -v pkg-resources > requirements.txt
 
@@ -16,3 +14,7 @@ These contain sensitive information. I've stored them in
     pass Servers/aws/blackjack-web-deb/env
 
 You can view them with `eb printenv`
+
+# PostgreSQL
+
+The credentials are stored in pass.
