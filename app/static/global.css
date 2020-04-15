@@ -5,3 +5,7 @@
 #logo {
     max-width: 50px;
 }
+
+.error {
+    color: #c44115;
+}

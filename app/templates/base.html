@@ -19,16 +19,20 @@
       <link href=/static/mvp.css rel=stylesheet>
     </head>
     <body>
-        <div>
-            Blackjack:
-            <a href="{{ url_for('index') }}">Home</a>
+    <header>
+      <nav>
+        <a href='{{ url_for('index') }}'><img alt="BJ logo" id=logo src="/static/logo.png" /></a>
+        <ul>
+            <li><a href="{{ url_for('index') }}">Home</a></li>
             {% if current_user.is_anonymous %}
-            <a href="{{ url_for('login') }}">Login</a>
+            <li><a href="{{ url_for('login') }}">Login</a></li>
             {% else %}
-            <a href="{{ url_for('logout') }}">Logout</a>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
             {% endif %}
-        </div>
-        <hr>
+        </ul>
+      </nav>
+    </header>
+    <main>
         {% with messages = get_flashed_messages() %}
         {% if messages %}
         <ul>
@@ -39,5 +43,7 @@
         {% endif %}
         {% endwith %}
         {% block content %}{% endblock %}
+    </main>
+    <footer></footer>
     </body>
 </html>
