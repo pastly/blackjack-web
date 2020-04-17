@@ -1,5 +1,5 @@
-from flask import render_template, flash, redirect, url_for, request
-from app import app, db
+from flask import render_template, flash, redirect, url_for, request, abort
+from app import app, db, hashids
 from app.forms import LoginForm, RegistrationForm
 from app.models import User
 from flask_login import current_user, login_user, logout_user, login_required
@@ -74,4 +74,22 @@ def profile():
     if not current_user.is_authenticated:
         # should never happen, right?
         return redirect(url_for('index'))
-    return my_render_template('profile.html', title='Profile')
+    return redirect(
+        url_for('profile_show', id_hash=hashids.encode(current_user.id)))
+    # return my_render_template('profile.html', title='Profile')
+
+
+@app.route('/profile/<id_hash>')
+def profile_show(id_hash):
+    # this returns a tuple
+    int_id = hashids.decode(id_hash)
+    # 0 len if invalid hashid, >1 if hashid for a 2+ len tuple
+    if len(int_id) != 1:
+        abort(404)
+    int_id = int_id[0]
+    user = User.query.filter_by(id=int_id).first()
+    # might have been a valid hashid for a user that doesn't exist
+    if not user:
+        abort(404)
+    return my_render_template(
+        'profile.html', title=f'{user.username}', user=user)

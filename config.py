@@ -17,3 +17,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = postgres_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     GOOGLE_ANALYTICS = os.environ.get('GOOGLE_ANALYTICS') or None
+    # fallback to hashids default alphabet
+    HASHIDS_ALPHABET = os.environ.get('HASHIDS_ALPHABET') or 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'  # noqa
+    HASHIDS_SALT = os.environ.get('HASHIDS_SALT') or 'F2sbGPMXbLAU5PXQFFvWsthB'
+    HASHIDS_MIN_LEN = int(os.environ.get('HASHIDS_MIN_LEN') or 6)

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ current_user.username }}</h1>
+<h1>{{ user.username }}</h1>
+<img src="{{ robohash_url(user.id, size=150) }}" alt="{{ user.username }} profile picture"/>
 {% endblock %}
