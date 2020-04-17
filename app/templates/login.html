@@ -18,7 +18,9 @@
             <span class=error>[{{ error }}]</span>
             {% endfor %}
         </p>
+        <!--
         <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+        -->
         <p>{{ form.submit() }}</p>
     <p> New User? <a href="{{ url_for('register') }}">Register</a></p>
     </form>
