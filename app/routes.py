@@ -66,3 +66,12 @@ def register():
         flash('You have registered! Now login.')
         return redirect(url_for('login'))
     return my_render_template('register.html', title='Register', form=form)
+
+
+@app.route('/profile', methods=['GET'])
+@login_required
+def profile():
+    if not current_user.is_authenticated:
+        # should never happen, right?
+        return redirect(url_for('index'))
+    return my_render_template('profile.html', title='Profile')
