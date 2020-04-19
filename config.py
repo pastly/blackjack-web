@@ -21,3 +21,4 @@ class Config:
     HASHIDS_ALPHABET = os.environ.get('HASHIDS_ALPHABET') or 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'  # noqa
     HASHIDS_SALT = os.environ.get('HASHIDS_SALT') or 'F2sbGPMXbLAU5PXQFFvWsthB'
     HASHIDS_MIN_LEN = int(os.environ.get('HASHIDS_MIN_LEN') or 6)
+    WASM_URL_PREFIX = os.environ.get('WASM_URL_PREFIX') or '/static/wasm'

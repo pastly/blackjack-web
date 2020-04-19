@@ -93,3 +93,9 @@ def profile_show(id_hash):
         abort(404)
     return my_render_template(
         'profile.html', title=f'{user.username}', user=user)
+
+
+@app.route('/train/free-play')
+def train_free_play():
+    return my_render_template(
+        'train-free-play.html', title='Free Basic Strategy')

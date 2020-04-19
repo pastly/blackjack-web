@@ -14,6 +14,13 @@ def robohash_url(int_id, size):
     return f'{proto}://{host}/{hash_id}?set={set_}&size={size}x{size}'
 
 
+def wasm_urls(resource):
+    prefix = app.config['WASM_URL_PREFIX']
+    # return url to the wasm itself and the JS glue for it
+    return f'{prefix}/bj_web_{resource}_bg.wasm',\
+        f'{prefix}/bj_web_{resource}.js'
+
+
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
@@ -26,6 +33,7 @@ hashids = Hashids(
 
 
 app.add_template_global(name='robohash_url', f=robohash_url)
+app.add_template_global(name='wasm_urls', f=wasm_urls)
 
 # For pages that require the user to login, send them to the login page (where
 # the string 'login' is what is used in url_for(...) to get the URL)

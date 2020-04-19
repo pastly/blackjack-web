@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link href=/static/free-play.css rel=stylesheet>
+{% endblock %}
+{% block content %}
+{% set wasm_bin, wasm_js = wasm_urls('free_play') %}
+<!-- Note the usage of `type=module` here as this is an ES6 module -->
+<script type="module">
+    // Use ES module import syntax to import functionality from the module
+    // that we have compiled.
+    //
+    // Note that the `default` import is an initialization function which
+    // will "boot" the module and make it ready to use. Currently browsers
+    // don't support natively imported WebAssembly as an ES module, but
+    // eventually the manual initialization won't be required!
+    import init, {
+        on_button_hit,
+        on_button_stand,
+        on_button_double,
+        on_button_split,
+        on_button_surrender,
+        on_button_clear_stats,
+    } from '{{ wasm_js }}';
+
+    async function run() {
+    // First up we need to actually load the wasm file, so we use the
+    // default export to inform it where the wasm file is located on the
+    // server, and then we wait on the returned promise to wait for the
+    // wasm to be loaded.
+    // It may look like this: `await init('./pkg/without_a_bundler_bg.wasm');`,
+    // but there is also a handy default inside `init` function, which uses
+    // `import.meta` to locate the wasm file relatively to js file
+    //
+    // Note that instead of a string here you can also pass in an instance
+    // of `WebAssembly.Module` which allows you to compile your own module.
+    // Also note that the promise, when resolved, yields the wasm module's
+    // exports which is the same as importing the `*_bg` module in other
+    // modes
+    await init();
+
+    //// And afterwards we can use all the functionality defined in wasm.
+    //const result = add(1, 2);
+    //console.log(`1 + 2 = ${result}`);
+    //if (result !== 3)
+    //  throw new Error("wasm addition doesn't work!");
+    //init_panic_hook();
+    }
+
+    run();
+    window.on_button_hit = on_button_hit;
+    window.on_button_stand = on_button_stand;
+    window.on_button_double = on_button_double;
+    window.on_button_split = on_button_split;
+    window.on_button_surrender = on_button_surrender;
+    window.on_button_clear_stats = on_button_clear_stats;
+    document.addEventListener("keydown", key => {
+    if (key.key == "h" || key.key == "H") {
+        on_button_hit();  
+    } else if (key.key == "s" || key.key == "S") {
+        on_button_stand();  
+    } else if (key.key == "d" || key.key == "D") {
+        on_button_double();  
+    } else if (key.key == "p" || key.key == "P") {
+        on_button_split();  
+    } else if (key.key == "r" || key.key == "R") {
+        on_button_surrender();
+    }
+    });
+</script>
+Player:<br/>
+<span class=card id=player_cards></span><br/>
+Dealer:<br/>
+<span class=card id=dealer_cards></span><br/>
+<div id=buttons>
+<a id=button_hit onClick='on_button_hit(); return false;'/><b>Hit</b></a>
+<a id=button_stand onClick='on_button_stand(); return false;'/><b>Stand</b></a>
+<a id=button_double onClick='on_button_double(); return false;'/><b>Double</b></a>
+<a id=button_split onClick='on_button_split(); return false;'/><b>sPlit</b></a>
+<a id=button_surrender onClick='on_button_surrender(); return false;'/><b>Surrender</b></a>
+</div> <!-- buttons -->
+<div id=stats>
+Correct: <span id=num_correct>0</span>/<span id=num_seen>0</span><br/>
+This hand: <span id=hand_num_correct>0</span>/<span id=hand_num_seen>0</span><br/>
+Streak: <span id=num_streak>0</span><br/>
+<a onClick='on_button_clear_stats(); return false;' /><i>Clear stats</i></a>
+</div>
+<div id=hint>
+</div> <!-- hint -->
+<div id=strat>
+<a onClick='document.getElementById("strat_html").classList.toggle("hide"); return false;' /><i>Show/hide strategy card</i></a>
+<br/>
+<div id=strat_html></div> <!-- strat_html -->
+</div> <!-- strat -->
+{% endblock %}
