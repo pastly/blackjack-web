@@ -1,10 +1,41 @@
 {% extends "base.html" %}
-
+{% block extra_css %}
+{% endblock %}
 {% block content %}
-<div>
-    <h1>Train</h1>
-    <ul>
-        <li><a href="{{ url_for('train_free_play') }}">Basic Strategy</a></li>
-    </ul>
-</div>
+<article>
+    <h1>Free Blackjack Basic Strategy Training</h1>
+    <p>Welcome to the home of the best blackjack training programs. Here you
+    can learn how to <b>reduce the house edge</b> and <b>maximize your chances
+    of beating the casino</b>.</p>
+    <aside>
+        <p>Work on your basic strategy with the <b>most common</b> set of
+        Blackjack rules that you will find at <b>real casinos</b>!</p>
+        <a href="{{ url_for('train_basic_strategy') }}"><i>Train for free</i></a>
+    </aside>
+    <h1>No signup required</h1>
+    <p>Train for free, right in your browser! On your laptop or on your phone.
+    At home or on the go. <b>Our software works in any modern browser</b>.</p>
+    <p>Supported Browsers and Platforms</p>
+    <img style="height: 50px;" src=/static/logos/chrome.svg alt=chrome />
+    <img style="height: 50px;" src=/static/logos/firefox.svg alt=firefox />
+    <img style="height: 50px;" src=/static/logos/safari_64x64.png alt=safari />
+    <img style="height: 50px;" src=/static/logos/windows.svg alt=windows />
+    <img style="height: 50px;" src=/static/logos/Android_robot.svg alt=android />
+    <img style="height: 50px;" src=/static/logos/apple.svg alt=ios />
+    <br/>
+    <aside>
+        <h1>Features</h1>
+        <ul>
+            <li>Works offline.</li>
+            <li>Optimized for touch, keyboard, or mouse input. <b>Play how you want</b></li>
+            <li>No downloads. No bloated app to download. Play right here, for free, anywhere.</li>
+            <li>Optional reference <b>basic strategy card</b> so you don't have to leave the page.</li>
+            <li>Statistics including <b>streak</b> and <b>number of correct responses</b> for every possible hand.</li>
+        </ul>
+        <a href="{{ url_for('train_basic_strategy') }}"><i>Try it now</i></a>
+    </aside>
+    <h1>Get even more out of your game</h1>
+    <p>Create an account and we'll track your performance across sessions. Log
+    in on all your devices and track your statistics wherever you go!</p>
+</article>
 {% endblock %}

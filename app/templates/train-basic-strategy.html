@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block extra_css %}
-<link href=/static/free-play.css rel=stylesheet>
+<link href=/static/basic-strategy.css rel=stylesheet>
 {% endblock %}
 {% block content %}
-{% set wasm_bin, wasm_js = wasm_urls('free_play') %}
+{% set wasm_bin, wasm_js = wasm_urls('basic_strategy') %}
 <!-- Note the usage of `type=module` here as this is an ES6 module -->
 <script type="module">
     // Use ES module import syntax to import functionality from the module
@@ -20,6 +20,7 @@
         on_button_split,
         on_button_surrender,
         on_button_clear_stats,
+        rust_init,
     } from '{{ wasm_js }}';
 
     async function run() {
@@ -38,6 +39,11 @@
     // modes
     await init();
 
+    {% if current_user.is_anonymous %}
+    rust_init(true);
+    {% else %}
+    rust_init(false);
+    {% endif %}
     //// And afterwards we can use all the functionality defined in wasm.
     //const result = add(1, 2);
     //console.log(`1 + 2 = ${result}`);

@@ -95,7 +95,7 @@ def profile_show(id_hash):
         'profile.html', title=f'{user.username}', user=user)
 
 
-@app.route('/train/free-play')
-def train_free_play():
+@app.route('/train/basic-strategy')
+def train_basic_strategy():
     return my_render_template(
-        'train-free-play.html', title='Free Basic Strategy')
+        'train-basic-strategy.html', title='Basic Strategy')
