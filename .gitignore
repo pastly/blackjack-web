@@ -1,5 +1,6 @@
 *venv/
 __pycache__/
+app/static/wasm/
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
