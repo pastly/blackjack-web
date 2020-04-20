@@ -40,9 +40,9 @@
     await init();
 
     {% if current_user.is_anonymous %}
-    rust_init(true);
+    rust_init(true, 0);
     {% else %}
-    rust_init(false);
+    rust_init(false, 1);
     {% endif %}
     //// And afterwards we can use all the functionality defined in wasm.
     //const result = add(1, 2);
