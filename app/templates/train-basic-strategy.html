@@ -86,9 +86,7 @@ Dealer:<br/>
 </div> <!-- buttons -->
 <div id=stats>
 Correct: <span id=num_correct>0</span>/<span id=num_seen>0</span><br/>
-{% if not current_user.is_anonymous %}
 This hand: <span id=hand_num_correct>0</span>/<span id=hand_num_seen>0</span><br/>
-{% endif %}
 Streak: <span id=num_streak>0</span><br/>
 <a onClick='on_button_clear_stats(); return false;' /><i>Clear stats</i></a>
 </div>
