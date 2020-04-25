@@ -13,7 +13,7 @@ def postgres_uri():
 
 
 class Config:
-    # TESTING = False
+    TESTING = False
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'mNTYdSyk7278xjVku8WSactJ'
     SQLALCHEMY_DATABASE_URI = postgres_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -23,3 +23,4 @@ class Config:
     HASHIDS_SALT = os.environ.get('HASHIDS_SALT') or 'F2sbGPMXbLAU5PXQFFvWsthB'
     HASHIDS_MIN_LEN = int(os.environ.get('HASHIDS_MIN_LEN') or 6)
     WASM_URL_PREFIX = os.environ.get('WASM_URL_PREFIX') or '/static/wasm'
+    WTF_CSRF_ENABLED = True
