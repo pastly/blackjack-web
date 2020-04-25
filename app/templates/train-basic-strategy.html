@@ -21,7 +21,35 @@
         on_button_surrender,
         on_button_clear_stats,
         rust_init,
+        playstats_as_db_str,
+        playstats_db_str_into_storage,
     } from '{{ wasm_js }}';
+
+    {% if current_user.is_authenticated %}
+    window.upload_playstats = function() {
+        let s = playstats_as_db_str();
+        let req = new XMLHttpRequest();
+        req.open("POST", "{{ url_for('train_basic_strategy_play_stats') }}", true);
+        req.setRequestHeader("Content-Type", "text/plain");
+        req.send(s);
+    }
+
+    function download_playstats() {
+        let req = new XMLHttpRequest();
+        req.addEventListener("error", function(e) {
+            console.log("Request to fetch latest play stats had error:", e);
+        });
+        req.addEventListener("abort", function(e) {
+            console.log("Request to fetch latest play stats aborted:", e);
+        });
+        req.addEventListener("load", function(e) {
+            console.log("Request completed:", e);
+            console.log("Data:", req.responseText);
+        });
+        req.open("GET", "{{ url_for('train_basic_strategy_play_stats_latest') }}", true);
+        req.send();
+    }
+    {% endif %}
 
     async function run() {
     // First up we need to actually load the wasm file, so we use the
@@ -39,17 +67,21 @@
     // modes
     await init();
 
+    {# first argument: type of random, where 0 is draw random cards and 1 is
+    choose a random cell weighted by user's Table<PlayStats> #}
     {% if current_user.is_anonymous %}
-    rust_init(true, 0);
+    rust_init(0);
     {% else %}
-    rust_init(false, 1);
+    rust_init(1);
+    download_playstats();
     {% endif %}
-    //// And afterwards we can use all the functionality defined in wasm.
-    //const result = add(1, 2);
-    //console.log(`1 + 2 = ${result}`);
-    //if (result !== 3)
-    //  throw new Error("wasm addition doesn't work!");
-    //init_panic_hook();
+    //let s = playstats_as_db_str();
+    //console.log(s);
+    //var req = new XMLHttpRequest();
+    //req.open("POST", "{{ url_for('train_basic_strategy_play_stats') }}");
+    //req.setRequestHeader("Content-Type", "text/plain");
+    //req.send(s);
+    //playstats_db_str_into_storage(s);
     }
 
     run();
@@ -88,6 +120,12 @@ Dealer:<br/>
 Correct: <span id=num_correct>0</span>/<span id=num_seen>0</span><br/>
 This hand: <span id=hand_num_correct>0</span>/<span id=hand_num_seen>0</span><br/>
 Streak: <span id=num_streak>0</span><br/>
+<!--
+<a id=button_fetch_stats><i>Fetch stats</i></a>
+-->
+{% if current_user.is_authenticated %}
+<a id=button_upload_stats onClick='upload_playstats(); return false'><i>Upload stats</i></a>
+{% endif %}
 <a onClick='on_button_clear_stats(); return false;' /><i>Clear stats</i></a>
 </div>
 <div id=hint>
