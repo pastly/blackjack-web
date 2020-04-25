@@ -13,6 +13,7 @@ def postgres_uri():
 
 
 class Config:
+    # TESTING = False
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'mNTYdSyk7278xjVku8WSactJ'
     SQLALCHEMY_DATABASE_URI = postgres_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
