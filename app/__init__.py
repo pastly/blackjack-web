@@ -32,11 +32,14 @@ hashids = Hashids(
     salt=app.config['HASHIDS_SALT'])
 
 
+from app.auth import bp as auth_bp  # noqa: E402
+app.register_blueprint(auth_bp, url_prefix='/auth')
+
 app.add_template_global(name='robohash_url', f=robohash_url)
 app.add_template_global(name='wasm_urls', f=wasm_urls)
 
 # For pages that require the user to login, send them to the login page (where
 # the string 'login' is what is used in url_for(...) to get the URL)
-login.login_view = 'login'
+login.login_view = 'auth.login'
 
 from app import routes, models  # noqa
