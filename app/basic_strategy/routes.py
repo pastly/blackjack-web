@@ -1,7 +1,8 @@
 import gzip
-from flask import abort, request, Response, current_app
+from flask import abort, request, Response
 from flask_login import login_required, current_user
 from . import bp
+from .. import db
 from ..routes import my_render_template
 from ..models import BasicStrategyPlayStats
 
@@ -95,6 +96,6 @@ def play_stats():
     if not play_stats_seem_valid(request.data):
         abort(400)
     row = BSPS(user_id=current_user.id, data=gzip.compress(request.data))
-    current_app.db.session.add(row)
-    current_app.db.session.commit()
+    db.session.add(row)
+    db.session.commit()
     return ('', 204)
