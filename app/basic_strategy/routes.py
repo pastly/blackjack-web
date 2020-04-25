@@ -56,41 +56,43 @@ def play_stats_latest():
     return resp
 
 
+def play_stats_seem_valid(s_bytes):
+    # "999/999," 360 times
+    MAX_LEN = 360 * 8
+    if len(s_bytes) > MAX_LEN:
+        return False
+    try:
+        s = s_bytes.decode('utf-8')
+    except UnicodeDecodeError:
+        return False
+    # must have 360 items
+    parts = s.split(',')
+    if len(parts) != 360:
+        return False
+    for part in parts:
+        # each must look like a fraction
+        sub_parts = part.split('/')
+        if len(sub_parts) != 2:
+            return False
+        try:
+            # with valid ints
+            n, d = [int(_) for _ in sub_parts]
+        except ValueError:
+            return False
+        # and numerator can't be bigger than denominator
+        if n > d:
+            return False
+    return True
+
+
 @bp.route('/play-stats', methods=['POST'])
 @login_required
 def play_stats():
-    def seems_valid(s_bytes):
-        # "999/999," 360 times
-        MAX_LEN = 360 * 8
-        if len(s_bytes) > MAX_LEN:
-            return False
-        try:
-            s = s_bytes.decode('utf-8')
-        except UnicodeDecodeError:
-            return False
-        # must have 360 items
-        parts = s.split(',')
-        if len(parts) != 360:
-            return False
-        for part in parts:
-            # each must look like a fraction
-            sub_parts = part.split('/')
-            if len(sub_parts) != 2:
-                return False
-            try:
-                # with valid ints
-                n, d = [int(_) for _ in sub_parts]
-            except ValueError:
-                return False
-            # and numerator can't be bigger than denominator
-            if n > d:
-                return False
-        return True
     BSPS = BasicStrategyPlayStats
     if not current_user.is_authenticated:
         # should never happen, right?
         abort(403)
-    if not seems_valid(request.data):
+    if not play_stats_seem_valid(request.data):
         abort(400)
     row = BSPS(user_id=current_user.id, data=gzip.compress(request.data))
     current_app.db.session.add(row)
