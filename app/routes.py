@@ -47,14 +47,6 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/private')
-@login_required
-def private():
-    if not current_user.is_authenticated:
-        return 'Somehow an unauthenticated user got to here :('
-    return 'This is a private page'
-
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
