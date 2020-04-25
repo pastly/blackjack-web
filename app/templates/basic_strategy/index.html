@@ -43,8 +43,9 @@
             console.log("Request to fetch latest play stats aborted:", e);
         });
         req.addEventListener("load", function(e) {
-            console.log("Request completed:", e);
-            console.log("Data:", req.responseText);
+            //console.log("Request completed:", e);
+            //console.log("Data:", req.responseText);
+            playstats_db_str_into_stroage(req.responseText);
         });
         req.open("GET", "{{ url_for('basic_strategy.play_stats_latest') }}", true);
         req.send();
