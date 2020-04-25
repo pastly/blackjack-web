@@ -19,7 +19,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     GOOGLE_ANALYTICS = os.environ.get('GOOGLE_ANALYTICS') or None
     # fallback to hashids default alphabet
-    HASHIDS_ALPHABET = os.environ.get('HASHIDS_ALPHABET') or 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'  # noqa
+    HASHIDS_ALPHABET = os.environ.get('HASHIDS_ALPHABET') or 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'  # noqa: E501
     HASHIDS_SALT = os.environ.get('HASHIDS_SALT') or 'F2sbGPMXbLAU5PXQFFvWsthB'
     HASHIDS_MIN_LEN = int(os.environ.get('HASHIDS_MIN_LEN') or 6)
     WASM_URL_PREFIX = os.environ.get('WASM_URL_PREFIX') or '/static/wasm'
