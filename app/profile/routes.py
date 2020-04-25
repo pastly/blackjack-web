@@ -5,7 +5,7 @@ from ..models import User
 from ..routes import my_render_template
 
 
-@bp.route('/profile', methods=['GET'])
+@bp.route('/', methods=['GET'])
 @login_required
 def index():
     if not current_user.is_authenticated:
@@ -16,7 +16,7 @@ def index():
                 id_hash=current_app.hashids.encode(current_user.id)))
 
 
-@bp.route('/profile/<id_hash>')
+@bp.route('/<id_hash>')
 def show(id_hash):
     # this returns a tuple
     int_id = current_app.hashids.decode(id_hash)
