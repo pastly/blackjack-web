@@ -16,7 +16,6 @@ def my_render_template(*a, **kw):
 
 
 @app.route('/')
-@app.route('/index')
 def index():
     return my_render_template('index.html', title='Home')
 
