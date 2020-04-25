@@ -126,3 +126,42 @@ class BasicStrategyTests(TestCase):
         # verifying something is left. Wow such hacky.
         s = data.decode('utf-8')
         assert len(s.replace('0', '').replace('/', '').replace(',', ''))
+
+    def test_post_playstats_anonymous(self):
+        this = url_for('basic_strategy.play_stats')
+        resp = self.client.post(this)
+        assert resp.status_code == 302
+        loc = resp.headers['Location']
+        exp = url_for('auth.login', next=this)
+        assert loc.endswith(exp)
+
+    def test_post_playstats_authenticated_invalid(self):
+        self.create_user()
+        self.login()
+        this = url_for('basic_strategy.play_stats')
+        for data in [
+            b'',
+            b'9287984234',
+            b'0/0,0/0',  # too short
+            b'0/0,' * 360,  # trailing comma
+            (b'0/0,' * 360) + b'0/0',  # too long
+            (b'2/1,' * 359) + b'1/2',  # numerator bigger than denominator
+                ]:
+            resp = self.client.post(this, content_type='text/plain', data=data)
+            assert resp.status_code == 400
+
+    def test_post_playstats_authenticated(self):
+        self.create_user()
+        self.login()
+        this = url_for('basic_strategy.play_stats')
+        data_in = b'1/2,' * 359 + b'1/2'
+        resp = self.client.post(this, content_type='text/plain', data=data_in)
+        # data posts correctly
+        assert resp.status_code == 204
+        # it made it to the database
+        rows = BasicStrategyPlayStats.query.all()
+        assert len(rows) == 1
+        row = rows[0]
+        # the database has the correct data
+        data_out = gzip.decompress(row.data)
+        assert data_in == data_out
