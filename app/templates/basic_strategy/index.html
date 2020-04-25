@@ -29,7 +29,7 @@
     window.upload_playstats = function() {
         let s = playstats_as_db_str();
         let req = new XMLHttpRequest();
-        req.open("POST", "{{ url_for('train_basic_strategy_play_stats') }}", true);
+        req.open("POST", "{{ url_for('basic_strategy.play_stats') }}", true);
         req.setRequestHeader("Content-Type", "text/plain");
         req.send(s);
     }
@@ -46,7 +46,7 @@
             console.log("Request completed:", e);
             console.log("Data:", req.responseText);
         });
-        req.open("GET", "{{ url_for('train_basic_strategy_play_stats_latest') }}", true);
+        req.open("GET", "{{ url_for('basic_strategy.play_stats_latest') }}", true);
         req.send();
     }
     {% endif %}
@@ -78,7 +78,7 @@
     //let s = playstats_as_db_str();
     //console.log(s);
     //var req = new XMLHttpRequest();
-    //req.open("POST", "{{ url_for('train_basic_strategy_play_stats') }}");
+    //req.open("POST", "{{ url_for('basic_strategy.play_stats') }}");
     //req.setRequestHeader("Content-Type", "text/plain");
     //req.send(s);
     //playstats_db_str_into_storage(s);

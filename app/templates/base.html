@@ -22,13 +22,13 @@
     <body>
     <header>
       <nav>
-        <a href='{{ url_for('index') }}'><img alt="BJ logo" id=logo src="/static/logo.png" /></a>
+        <a href='{{ url_for('misc_routes.index') }}'><img alt="BJ logo" id=logo src="/static/logo.png" /></a>
         <ul>
-            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="{{ url_for('misc_routes.index') }}">Home</a></li>
             {% if current_user.is_anonymous %}
             <li><a href="{{ url_for('auth.login') }}">Login</a></li>
             {% else %}
-            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('profile.index') }}">Profile</a></li>
             <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
             {% endif %}
         </ul>
