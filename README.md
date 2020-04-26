@@ -31,6 +31,7 @@ To apply the migrations to the local test database, simply do:
 To apply the migrations to the real database:
 
     ./db-tunnel.sh &
+    sleep 3
     bash
     source bj-venv/bin/activate
     source <(pass Servers/aws/blackjack-web-dev/postgres-env)
