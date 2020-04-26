@@ -27,7 +27,7 @@
     } from '{{ wasm_js }}';
 
     {% if current_user.is_authenticated %}
-    window.upload_playstats = function() {
+    window.upload_statistics = function() {
         let data = {
             'play_stats': play_stats_from_state(),
             'streak': streak_from_state(),
@@ -38,7 +38,7 @@
         req.send(JSON.stringify(data));
     }
 
-    function download_playstats() {
+    function download_statistics() {
         let req = new XMLHttpRequest();
         req.addEventListener("error", function(e) {
             console.log("Request to fetch latest play stats had error:", e);
@@ -79,7 +79,7 @@
     rust_init(0);
     {% else %}
     rust_init(1);
-    download_playstats();
+    download_statistics();
     {% endif %}
     //let s = playstats_as_db_str();
     //console.log(s);
@@ -130,7 +130,7 @@ Streak: <span id=num_streak>0</span><br/>
 <a id=button_fetch_stats><i>Fetch stats</i></a>
 -->
 {% if current_user.is_authenticated %}
-<a id=button_upload_stats onClick='upload_playstats(); return false'><i>Upload stats</i></a>
+<a id=button_upload_stats onClick='upload_statistics(); return false'><i>Upload stats</i></a>
 {% endif %}
 <a onClick='on_button_clear_stats(); return false;' /><i>Clear stats</i></a>
 </div>
