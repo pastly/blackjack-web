@@ -3,7 +3,7 @@ from . import TestConfig
 from app import create_app, db
 from app.models import User, BasicStrategyPlayStats
 from app.basic_strategy.routes import play_stats_seem_valid
-from flask import url_for
+from flask import url_for, json
 import gzip
 
 USER_NAME = 'alice'
@@ -35,9 +35,14 @@ class BasicStrategyTests(TestCase):
         return u
 
     def insert_playstats(self, user):
-        data = b'1/2,' * 360
-        data = data[:len(data)-1]  # remove trailing comma
-        ps = BasicStrategyPlayStats(user_id=user.id, data=gzip.compress(data))
+        play_stats = b'1/2,' * 360
+        play_stats = play_stats[:len(play_stats)-1]  # remove trailing comma
+        streak = 0
+        ps = BasicStrategyPlayStats(
+            user_id=user.id,
+            play_stats=gzip.compress(play_stats),
+            streak=streak,
+        )
         db.session.add(ps)
         db.session.commit()
         return ps
@@ -68,10 +73,10 @@ class BasicStrategyTests(TestCase):
         assert resp.status_code == 200
         # Borrow the real validator to make sure it's valid
         # TODO maybe validate it ourself?
-        assert play_stats_seem_valid(resp.data)
+        assert play_stats_seem_valid(resp.json['play_stats'])
         # Make sure it's all zeros by removing zeros and the puncuation and
         # verifying nothing is left. Wow such hacky
-        s = resp.data.decode('utf-8')
+        s = resp.json['play_stats']
         assert not len(s.replace('0', '').replace('/', '').replace(',', ''))
 
     def test_latest_empty_gzip(self):
@@ -83,13 +88,14 @@ class BasicStrategyTests(TestCase):
             this, headers=[('Accept-Encoding', 'gzip')])
         assert resp.status_code == 200
         assert resp.headers['Content-Encoding'] == 'gzip'
-        data = gzip.decompress(resp.data)
+        json_ = json.loads(gzip.decompress(resp.data))
+        play_stats = json_['play_stats']
         # Borrow the real validator to make sure it's valid
         # TODO maybe validate it ourself?
-        assert play_stats_seem_valid(data)
+        assert play_stats_seem_valid(play_stats)
         # Make sure it's all zeros by removing zeros and the puncuation and
         # verifying nothing is left. Wow such hacky
-        s = data.decode('utf-8')
+        s = play_stats
         assert not len(s.replace('0', '').replace('/', '').replace(',', ''))
 
     def test_latest(self):
@@ -102,7 +108,7 @@ class BasicStrategyTests(TestCase):
         assert resp.status_code == 200
         # Borrow the real validator to make sure it's valid
         # TODO maybe validate it ourself?
-        assert play_stats_seem_valid(resp.data)
+        assert play_stats_seem_valid(resp.json['play_stats'])
         # Make sure it's NOT all zeros by removing zeros and the puncuation and
         # verifying something is left. Wow such hacky.
         s = resp.data.decode('utf-8')
@@ -118,13 +124,14 @@ class BasicStrategyTests(TestCase):
             this, headers=[('Accept-Encoding', 'gzip')])
         assert resp.status_code == 200
         assert resp.headers['Content-Encoding'] == 'gzip'
-        data = gzip.decompress(resp.data)
+        json_ = json.loads(gzip.decompress(resp.data))
+        play_stats = json_['play_stats']
         # Borrow the real validator to make sure it's valid
         # TODO maybe validate it ourself?
-        assert play_stats_seem_valid(data)
+        assert play_stats_seem_valid(play_stats)
         # Make sure it's NOT all zeros by removing zeros and the puncuation and
         # verifying something is left. Wow such hacky.
-        s = data.decode('utf-8')
+        s = play_stats
         assert len(s.replace('0', '').replace('/', '').replace(',', ''))
 
     def test_post_playstats_anonymous(self):
@@ -139,23 +146,29 @@ class BasicStrategyTests(TestCase):
         self.create_user()
         self.login()
         this = url_for('basic_strategy.play_stats')
-        for data in [
-            b'',
-            b'9287984234',
-            b'0/0,0/0',  # too short
-            b'0/0,' * 360,  # trailing comma
-            (b'0/0,' * 360) + b'0/0',  # too long
-            (b'2/1,' * 359) + b'1/2',  # numerator bigger than denominator
+        for play_stats in [
+            '',
+            '9287984234',
+            '0/0,0/0',  # too short
+            '0/0,' * 360,  # trailing comma
+            ('0/0,' * 360) + '0/0',  # too long
+            ('2/1,' * 359) + '1/2',  # numerator bigger than denominator
                 ]:
-            resp = self.client.post(this, content_type='text/plain', data=data)
+            resp = self.client.post(this, json={
+                'play_stats': play_stats,
+                'streak': 0,
+            })
             assert resp.status_code == 400
 
     def test_post_playstats_authenticated(self):
         self.create_user()
         self.login()
         this = url_for('basic_strategy.play_stats')
-        data_in = b'1/2,' * 359 + b'1/2'
-        resp = self.client.post(this, content_type='text/plain', data=data_in)
+        play_stats_in = '1/2,' * 359 + '1/2'
+        resp = self.client.post(this, json={
+                'play_stats': play_stats_in,
+                'streak': 0,
+        })
         # data posts correctly
         assert resp.status_code == 204
         # it made it to the database
@@ -163,5 +176,5 @@ class BasicStrategyTests(TestCase):
         assert len(rows) == 1
         row = rows[0]
         # the database has the correct data
-        data_out = gzip.decompress(row.data)
-        assert data_in == data_out
+        play_stats_out = gzip.decompress(row.play_stats).decode('utf-8')
+        assert play_stats_in == play_stats_out

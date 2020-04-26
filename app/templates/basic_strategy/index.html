@@ -21,17 +21,21 @@
         on_button_surrender,
         on_button_clear_stats,
         rust_init,
-        playstats_as_db_str,
-        playstats_db_str_into_storage,
+        play_stats_from_state,
+        streak_from_state,
+        statistics_into_state,
     } from '{{ wasm_js }}';
 
     {% if current_user.is_authenticated %}
     window.upload_playstats = function() {
-        let s = playstats_as_db_str();
+        let data = {
+            'play_stats': play_stats_from_state(),
+            'streak': streak_from_state(),
+        };
         let req = new XMLHttpRequest();
         req.open("POST", "{{ url_for('basic_strategy.play_stats') }}", true);
-        req.setRequestHeader("Content-Type", "text/plain");
-        req.send(s);
+        req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        req.send(JSON.stringify(data));
     }
 
     function download_playstats() {
@@ -43,11 +47,12 @@
             console.log("Request to fetch latest play stats aborted:", e);
         });
         req.addEventListener("load", function(e) {
-            //console.log("Request completed:", e);
-            //console.log("Data:", req.responseText);
-            playstats_db_str_into_stroage(req.responseText);
+            let play_stats = req.response['play_stats'];
+            let streak = req.response['streak'];
+            statistics_into_state(play_stats, streak);
         });
         req.open("GET", "{{ url_for('basic_strategy.play_stats_latest') }}", true);
+        req.responseType = "json";
         req.send();
     }
     {% endif %}
