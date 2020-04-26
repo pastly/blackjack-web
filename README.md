@@ -38,3 +38,12 @@ To apply the migrations to the real database:
     flask db upgrade
     exit
     kill %1
+
+To connect to the remote DB manually, run the above commands *until `flask db
+upgrade`*. At that point, run the `pass` command to get access to the password.
+Copy it. Then you can run this command and paste the password when prompted.
+
+    psql -d $RDS_DB_NAME -h 127.0.0.1 -p $RDS_PORT -U $RDS_USERNAME
+    Password for user [...]:
+    [...]
+    ebdb=>
