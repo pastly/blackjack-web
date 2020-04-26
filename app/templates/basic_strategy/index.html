@@ -128,10 +128,10 @@ This hand: <span id=hand_num_correct>0</span>/<span id=hand_num_seen>0</span><br
 Streak: <span id=num_streak>0</span><br/>
 <!--
 <a id=button_fetch_stats><i>Fetch stats</i></a>
--->
 {% if current_user.is_authenticated %}
 <a id=button_upload_stats onClick='upload_statistics(); return false'><i>Upload stats</i></a>
 {% endif %}
+-->
 <a onClick='on_button_clear_stats(); return false;' /><i>Clear stats</i></a>
 </div>
 <div id=hint>
