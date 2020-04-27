@@ -77,27 +77,33 @@
     }
     {% endif %}
     {% if current_user.is_authenticated %}
-    let flash_message_fade_interval;
-    let update_every_ms = 50;
-    let duration_ms = 3000;
+    let flash_message_fade_interval = 0;
+    let flash_message_update_every_ms = 50;
+    let flash_message_duration_ms = 3000;
     window.flash_statistics_message = function(msg) {
         let elm = document.getElementById("upload_message");
         elm.textContent = msg;
         // clean up from existing fading, if any
         window.clearInterval(flash_message_fade_interval);
+        flash_message_fade_interval = 0;
         // start new fading
         let opacity = 1; // initial
         elm.style.opacity = opacity;
         flash_message_fade_interval = window.setInterval(() => {
-            opacity -= update_every_ms / duration_ms;
+            opacity -= flash_message_update_every_ms / flash_message_duration_ms;
             elm.style.opacity = opacity;
             if (opacity <= 0) {
                 window.clearInterval(flash_message_fade_interval);
+                flash_message_fade_interval = 0;
             }
-        }, update_every_ms);
+        }, flash_message_update_every_ms);
     };
     {% endif %}
 
+    {% if current_user.is_authenticated %}
+    let inactivity_upload_timeout = 0;
+    let inactivity_timeout_duration_ms = 2000;
+    {% endif %}
     window.on_button = function(button_name) {
         if (button_name == "hit") {
             on_button_hit();
@@ -116,10 +122,20 @@
             return;
         }
         {% if current_user.is_authenticated %}
+        if (inactivity_upload_timeout) {
+            window.clearTimeout(inactivity_upload_timeout);
+            inactivity_upload_timeout = 0;
+        }
         if (should_upload_statistics()) {
             upload_statistics();
             reset_next_upload_statistics();
             flash_statistics_message("Uploading latest statistics ...");
+        } else {
+            inactivity_upload_timeout = window.setTimeout(() => {
+                upload_statistics();
+                reset_next_upload_statistics();
+                flash_statistics_message("Uploading latest statistics ...");
+            }, inactivity_timeout_duration_ms);
         }
         {% endif %}
     };
