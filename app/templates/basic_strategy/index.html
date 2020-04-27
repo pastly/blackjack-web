@@ -24,6 +24,8 @@
         play_stats_from_state,
         streak_from_state,
         statistics_into_state,
+        should_upload_statistics,
+        reset_next_upload_statistics,
     } from '{{ wasm_js }}';
 
     {% if current_user.is_authenticated %}
@@ -33,29 +35,94 @@
             'streak': streak_from_state(),
         };
         let req = new XMLHttpRequest();
+        req.addEventListener("error", function(e) {
+            flash_statistics_message("Error uploading stats");
+        });
+        req.addEventListener("abort", function(e) {
+            flash_statistics_message("Aborted upload of stats");
+        });
+        req.addEventListener("load", function(e) {
+            if (req.status >= 200 && req.status < 300) {
+                flash_statistics_message("Uploaded latest statistics :)");
+            } else {
+                flash_statistics_message("Problem uploading latest statistics");
+                console.log(req);
+            }
+        });
         req.open("POST", "{{ url_for('basic_strategy.play_stats') }}", true);
         req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         req.send(JSON.stringify(data));
     }
 
     function download_statistics() {
+        flash_statistics_message("Downloading latest statistics ...");
         let req = new XMLHttpRequest();
         req.addEventListener("error", function(e) {
-            console.log("Request to fetch latest play stats had error:", e);
+            flash_statistics_message("Error fetching latest statistics");
+            console.log(req);
         });
         req.addEventListener("abort", function(e) {
-            console.log("Request to fetch latest play stats aborted:", e);
+            flash_statistics_message("Aborted fetching latest statistics");
+            console.log(req);
         });
         req.addEventListener("load", function(e) {
             let play_stats = req.response['play_stats'];
             let streak = req.response['streak'];
             statistics_into_state(play_stats, streak);
+            flash_statistics_message("Downloaded latest statistics");
         });
         req.open("GET", "{{ url_for('basic_strategy.play_stats_latest') }}", true);
         req.responseType = "json";
         req.send();
     }
     {% endif %}
+    {% if current_user.is_authenticated %}
+    let flash_message_fade_interval;
+    let update_every_ms = 50;
+    let duration_ms = 3000;
+    window.flash_statistics_message = function(msg) {
+        let elm = document.getElementById("upload_message");
+        elm.textContent = msg;
+        // clean up from existing fading, if any
+        window.clearInterval(flash_message_fade_interval);
+        // start new fading
+        let opacity = 1; // initial
+        elm.style.opacity = opacity;
+        flash_message_fade_interval = window.setInterval(() => {
+            opacity -= update_every_ms / duration_ms;
+            elm.style.opacity = opacity;
+            if (opacity <= 0) {
+                window.clearInterval(flash_message_fade_interval);
+            }
+        }, update_every_ms);
+    };
+    {% endif %}
+
+    window.on_button = function(button_name) {
+        if (button_name == "hit") {
+            on_button_hit();
+        } else if (button_name == "stand") {
+            on_button_stand();
+        } else if (button_name == "double") {
+            on_button_double();
+        } else if (button_name == "split") {
+            on_button_split();
+        } else if (button_name == "surrender") {
+            on_button_surrender();
+        } else if (button_name == "clear_stats") {
+            on_button_clear_stats();
+        } else {
+            console.log("Unknown button name", button_name);
+            return;
+        }
+        {% if current_user.is_authenticated %}
+        if (should_upload_statistics()) {
+            upload_statistics();
+            reset_next_upload_statistics();
+            flash_statistics_message("Uploading latest statistics ...");
+        }
+        {% endif %}
+    };
 
     async function run() {
     // First up we need to actually load the wasm file, so we use the
@@ -91,23 +158,17 @@
     }
 
     run();
-    window.on_button_hit = on_button_hit;
-    window.on_button_stand = on_button_stand;
-    window.on_button_double = on_button_double;
-    window.on_button_split = on_button_split;
-    window.on_button_surrender = on_button_surrender;
-    window.on_button_clear_stats = on_button_clear_stats;
     document.addEventListener("keydown", key => {
     if (key.key == "h" || key.key == "H") {
-        on_button_hit();  
+        on_button("hit");
     } else if (key.key == "s" || key.key == "S") {
-        on_button_stand();  
+        on_button("stand");
     } else if (key.key == "d" || key.key == "D") {
-        on_button_double();  
+        on_button("double");
     } else if (key.key == "p" || key.key == "P") {
-        on_button_split();  
+        on_button("split");
     } else if (key.key == "r" || key.key == "R") {
-        on_button_surrender();
+        on_button("surrender");
     }
     });
 </script>
@@ -116,23 +177,28 @@ Player:<br/>
 Dealer:<br/>
 <span class=card id=dealer_cards></span><br/>
 <div id=buttons>
-<a id=button_hit onClick='on_button_hit(); return false;'/><b>Hit</b></a>
-<a id=button_stand onClick='on_button_stand(); return false;'/><b>Stand</b></a>
-<a id=button_double onClick='on_button_double(); return false;'/><b>Double</b></a>
-<a id=button_split onClick='on_button_split(); return false;'/><b>sPlit</b></a>
-<a id=button_surrender onClick='on_button_surrender(); return false;'/><b>Surrender</b></a>
+<a id=button_hit onClick='on_button("hit"); return false;'/><b>Hit</b></a>
+<a id=button_stand onClick='on_button("stand"); return false;'/><b>Stand</b></a>
+<a id=button_double onClick='on_button("double"); return false;'/><b>Double</b></a>
+<a id=button_split onClick='on_button("split"); return false;'/><b>sPlit</b></a>
+<a id=button_surrender onClick='on_button("surrender"); return false;'/><b>Surrender</b></a>
 </div> <!-- buttons -->
 <div id=stats>
 Correct: <span id=num_correct>0</span>/<span id=num_seen>0</span><br/>
 This hand: <span id=hand_num_correct>0</span>/<span id=hand_num_seen>0</span><br/>
-Streak: <span id=num_streak>0</span><br/>
+Streak: <span id=num_streak>0</span>
+{% if current_user.is_authenticated %}
+<span id=upload_message></span><br/>
+{% else %}
+<br/>
+{% endif %}
 <!--
 <a id=button_fetch_stats><i>Fetch stats</i></a>
 {% if current_user.is_authenticated %}
 <a id=button_upload_stats onClick='upload_statistics(); return false'><i>Upload stats</i></a>
 {% endif %}
 -->
-<a onClick='on_button_clear_stats(); return false;' /><i>Clear stats</i></a>
+<a onClick='on_button("clear_stats"); return false;' /><i>Clear stats</i></a>
 </div>
 <div id=hint>
 </div> <!-- hint -->
