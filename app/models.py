@@ -1,12 +1,13 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login
 from flask_login import UserMixin
+import gzip
 
 # https://stackoverflow.com/questions/13370317/sqlalchemy-default-datetime
 # https://docs.sqlalchemy.org/en/13/core/compiler.html#utc-timestamp-function
 from sqlalchemy.sql import expression
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.types import DateTime
+from sqlalchemy.types import DateTime, TypeDecorator
 
 
 class utcnow(expression.FunctionElement):
@@ -45,9 +46,23 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 
+class PlayStats(TypeDecorator):
+    ''' Gzips the string representation of Table<PlayStats> before storing in
+    DB, and un-gzips when pulling it out.
+    '''
+
+    impl = db.LargeBinary
+
+    def process_bind_param(self, value, dialect):
+        return gzip.compress(value.encode('utf-8'))
+
+    def process_result_value(self, value, dialect):
+        return gzip.decompress(value).decode('utf-8')
+
+
 class BasicStrategyPlayStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     time = db.Column(db.DateTime, server_default=utcnow(), nullable=False)
-    play_stats = db.Column(db.LargeBinary(length=1024), nullable=False)
+    play_stats = db.Column(PlayStats(length=1024), nullable=False)
     streak = db.Column(db.Integer, nullable=False)

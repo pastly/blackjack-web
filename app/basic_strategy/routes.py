@@ -48,11 +48,10 @@ def play_stats_latest():
     row = BSPS.query.filter_by(
         user_id=current_user.id).order_by(
             BSPS.time.desc()).first()
-    data_bytes = json.dumps(dict(
-        play_stats=DEFAULT_PLAYSTATS if not row else
-        gzip.decompress(row.play_stats).decode('utf-8'),
-        streak=DEFAULT_STREAK if not row else row.streak,
-    )).encode('utf-8')
+    data_bytes = json.dumps({
+        'play_stats': DEFAULT_PLAYSTATS if not row else row.play_stats,
+        'streak': DEFAULT_STREAK if not row else row.streak,
+    }).encode('utf-8')
     if 'gzip' in request.accept_encodings:
         resp = Response(gzip.compress(data_bytes))
         resp.headers['Content-Encoding'] = 'gzip'
@@ -96,10 +95,9 @@ def play_stats():
         abort(403)
     if not play_stats_seem_valid(request.json['play_stats']):
         abort(400)
-    play_stats_bytes = request.json['play_stats'].encode('utf-8')
     row = BSPS(
         user_id=current_user.id,
-        play_stats=gzip.compress(play_stats_bytes),
+        play_stats=request.json['play_stats'],
         streak=request.json['streak'],
     )
     db.session.add(row)

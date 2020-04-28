@@ -1,10 +1,10 @@
+import gzip
 from unittest import TestCase
 from . import TestConfig
 from app import create_app, db
 from app.models import User, BasicStrategyPlayStats
 from app.basic_strategy.routes import play_stats_seem_valid
 from flask import url_for, json
-import gzip
 
 USER_NAME = 'alice'
 USER_EMAIL = 'alice@example.com'
@@ -35,12 +35,12 @@ class BasicStrategyTests(TestCase):
         return u
 
     def insert_playstats(self, user):
-        play_stats = b'1/2,' * 360
+        play_stats = '1/2,' * 360
         play_stats = play_stats[:len(play_stats)-1]  # remove trailing comma
         streak = 0
         ps = BasicStrategyPlayStats(
             user_id=user.id,
-            play_stats=gzip.compress(play_stats),
+            play_stats=play_stats,
             streak=streak,
         )
         db.session.add(ps)
@@ -176,5 +176,5 @@ class BasicStrategyTests(TestCase):
         assert len(rows) == 1
         row = rows[0]
         # the database has the correct data
-        play_stats_out = gzip.decompress(row.play_stats).decode('utf-8')
+        play_stats_out = row.play_stats
         assert play_stats_in == play_stats_out
