@@ -33,6 +33,8 @@ def create_app(config_class=Config):
     from app.basic_strategy import bp as basic_strategy_bp  # noqa: E402
     app.register_blueprint(
         basic_strategy_bp, url_prefix='/train/basic-strategy')
+    from app.time_trial import bp as time_trial_bp  # noqa: E402
+    app.register_blueprint(time_trial_bp, url_prefix='/train/time-trial')
     from app.misc_routes import bp as misc_routes_bp  # noqa: E402
     app.register_blueprint(misc_routes_bp)
 

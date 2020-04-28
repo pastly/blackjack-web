@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link href=/static/time-trial.css rel=stylesheet>
+{% endblock %}
+{% block content %}
+{% set wasm_bin, wasm_js = wasm_urls('time_trial') %}
+{% set num_hands = 30 %}
+<!-- Note the usage of `type=module` here as this is an ES6 module -->
+<script type="module">
+    // Use ES module import syntax to import functionality from the module
+    // that we have compiled.
+    //
+    // Note that the `default` import is an initialization function which
+    // will "boot" the module and make it ready to use. Currently browsers
+    // don't support natively imported WebAssembly as an ES module, but
+    // eventually the manual initialization won't be required!
+    import init, {
+        on_button_hit,
+        on_button_stand,
+        on_button_double,
+        on_button_split,
+        on_button_surrender,
+        rust_init,
+    } from '{{ wasm_js }}';
+
+    async function run() {
+        await init();
+        rust_init({{ num_hands }});
+    }
+    run();
+
+    window.on_button = function(button_name) {
+        if (button_name == "hit") {
+            on_button_hit();
+        } else if (button_name == "stand") {
+            on_button_stand();
+        } else if (button_name == "double") {
+            on_button_double();
+        } else if (button_name == "split") {
+            on_button_split();
+        } else if (button_name == "surrender") {
+            on_button_surrender();
+        } else {
+            console.log("Unknown button name", button_name);
+            return;
+        }
+    };
+
+    let flash_hint_message_fade_interval = 0;
+    let flash_hint_message_update_every_ms = 100;
+    let flash_hint_message_duration_ms = 10000;
+    window.flash_hint_message = function(msg) {
+        set_hint_message(msg);
+        let elm = document.getElementById("hint");
+        // start new fading
+        let opacity = 1; // initial
+        elm.style.opacity = opacity;
+        flash_hint_message_fade_interval = window.setInterval(() => {
+            opacity -= flash_hint_message_update_every_ms / flash_hint_message_duration_ms;
+            elm.style.opacity = opacity;
+            if (opacity <= 0) {
+                window.clearInterval(flash_hint_message_fade_interval);
+                flash_hint_message_fade_interval = 0;
+            }
+        }, flash_hint_message_update_every_ms);
+    };
+    window.set_hint_message = function(msg) {
+        let elm = document.getElementById("hint");
+        elm.textContent = msg;
+        // clean up from existing fading, if any
+        window.clearInterval(flash_hint_message_fade_interval);
+        flash_hint_message_fade_interval = 0;
+    }
+
+    document.addEventListener("keydown", key => {
+        if (key.key == "h" || key.key == "H") {
+            on_button("hit");
+        } else if (key.key == "s" || key.key == "S") {
+            on_button("stand");
+        } else if (key.key == "d" || key.key == "D") {
+            on_button("double");
+        } else if (key.key == "p" || key.key == "P") {
+            on_button("split");
+        } else if (key.key == "r" || key.key == "R") {
+            on_button("surrender");
+        }
+    });
+</script>
+Player:<br/>
+<span class=card id=player_cards></span><br/>
+Dealer:<br/>
+<span class=card id=dealer_cards></span><br/>
+<span id=hint>
+    See how quickly you can work through {{ num_hands }} hands! Time starts the
+    moment you respond to this first hand.
+</span><br/>
+<div id=buttons>
+<a id=button_hit onClick='on_button("hit"); return false;'/><b>Hit</b></a>
+<a id=button_stand onClick='on_button("stand"); return false;'/><b>Stand</b></a>
+<a id=button_double onClick='on_button("double"); return false;'/><b>Double</b></a>
+<a id=button_split onClick='on_button("split"); return false;'/><b>sPlit</b></a>
+<a id=button_surrender onClick='on_button("surrender"); return false;'/><b>Surrender</b></a>
+</div> <!-- buttons -->
+<div id=strat>
+<a onClick='document.getElementById("strat_html").classList.toggle("hide"); return false;' /><i>Show/hide strategy card</i></a>
+<br/>
+<div id=strat_html></div> <!-- strat_html -->
+</div> <!-- strat -->
+{% endblock %}
