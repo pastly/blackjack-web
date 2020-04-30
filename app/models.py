@@ -63,6 +63,6 @@ class PlayStats(TypeDecorator):
 class BasicStrategyPlayStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
-    time = db.Column(db.DateTime, server_default=utcnow(), nullable=False)
+    timestamp = db.Column(db.DateTime, server_default=utcnow(), nullable=False)
     play_stats = db.Column(PlayStats(length=1024), nullable=False)
     streak = db.Column(db.Integer, nullable=False)
