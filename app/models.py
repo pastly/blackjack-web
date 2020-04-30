@@ -46,9 +46,9 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 
-class PlayStats(TypeDecorator):
-    ''' Gzips the string representation of Table<PlayStats> before storing in
-    DB, and un-gzips when pulling it out.
+class GzippedString(TypeDecorator):
+    ''' Take a str ('' not b'') and gzip before putting in DB and ungzip before
+    pulling from DB
     '''
 
     impl = db.LargeBinary
@@ -64,5 +64,5 @@ class BasicStrategyPlayStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     timestamp = db.Column(db.DateTime, server_default=utcnow(), nullable=False)
-    play_stats = db.Column(PlayStats(length=1024), nullable=False)
     streak = db.Column(db.Integer, nullable=False)
+    play_stats = db.Column(GzippedString(length=1024), nullable=False)
