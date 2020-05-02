@@ -47,7 +47,7 @@ def play_stats_latest():
         abort(403)
     row = BSPS.query.filter_by(
         user_id=current_user.id).order_by(
-            BSPS.time.desc()).first()
+            BSPS.timestamp.desc()).first()
     data_bytes = json.dumps({
         'play_stats': DEFAULT_PLAYSTATS if not row else row.play_stats,
         'streak': DEFAULT_STREAK if not row else row.streak,
