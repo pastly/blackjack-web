@@ -20,6 +20,9 @@
         on_button_double,
         on_button_split,
         on_button_surrender,
+        okay_to_upload_results,
+        results_from_state,
+        clear_results,
         rust_init,
     } from '{{ wasm_js }}';
 
@@ -40,11 +43,41 @@
             on_button_split();
         } else if (button_name == "surrender") {
             on_button_surrender();
+        } else if (button_name == "upload") {
+            upload_results();
         } else {
             console.log("Unknown button name", button_name);
             return;
         }
     };
+
+    window.upload_results = function(results) {
+        if (!okay_to_upload_results()) {
+            return;
+        }
+        let data = {
+            'results': results_from_state(),
+        };
+        let req = new XMLHttpRequest();
+        req.addEventListener("error", function(e) {
+            flash_hint_message("Error uploading results");
+        });
+        req.addEventListener("abort", function(e) {
+            flash_hint_message("Aborted upload of results");
+        });
+        req.addEventListener("load", function(e) {
+            if (req.status >= 200 && req.status < 300) {
+                flash_hint_message("Uploaded results :)");
+                clear_results();
+            } else {
+                flash_hint_message("Problem uploading results");
+                console.log(req);
+            }
+        });
+        req.open("POST", "{{ url_for('time_trial.results') }}", true);
+        req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        req.send(JSON.stringify(data));
+    }
 
     let flash_hint_message_fade_interval = 0;
     let flash_hint_message_update_every_ms = 100;
@@ -100,6 +133,8 @@ Dealer:<br/>
 <a id=button_double onClick='on_button("double"); return false;'/><b>Double</b></a>
 <a id=button_split onClick='on_button("split"); return false;'/><b>sPlit</b></a>
 <a id=button_surrender onClick='on_button("surrender"); return false;'/><b>Surrender</b></a>
+<a id=button_upload_yes class=hide onClick='on_button("upload"); return false;'><b>Yes</b></a>
+<a id=button_upload_no class=hide href=''><b>No</b></a>
 </div> <!-- buttons -->
 <div id=strat>
 <a onClick='document.getElementById("strat_html").classList.toggle("hide"); return false;' /><i>Show/hide strategy card</i></a>

@@ -60,9 +60,30 @@ class GzippedString(TypeDecorator):
         return gzip.decompress(value).decode('utf-8')
 
 
+class GzippedBytes(TypeDecorator):
+    ''' Take bytes (b'' not '') and gzip before putting in DB and ungzip before
+    pulling from DB
+    '''
+
+    impl = db.LargeBinary
+
+    def process_bind_param(self, value, dialect):
+        return gzip.compress(value)
+
+    def process_result_value(self, value, dialect):
+        return gzip.decompress(value)
+
+
 class BasicStrategyPlayStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     timestamp = db.Column(db.DateTime, server_default=utcnow(), nullable=False)
-    streak = db.Column(db.Integer, nullable=False)
     play_stats = db.Column(GzippedString(length=1024), nullable=False)
+    streak = db.Column(db.Integer, nullable=False)
+
+
+class TimeTrialResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, server_default=utcnow(), nullable=False)
+    hands = db.Column(GzippedBytes(length=25*1024), nullable=False)
