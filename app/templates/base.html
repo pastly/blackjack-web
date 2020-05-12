@@ -15,6 +15,7 @@
       gtag('config', '{{ google_analytics_id }}');
       </script>
       {% endif %}
+      <meta name=viewport content="width=device-width, initial-scale=1">
       <link href=/static/mvp.css rel=stylesheet>
       <link href=/static/global.css rel=stylesheet>
       {% block extra_css %} {% endblock %}
@@ -29,6 +30,7 @@
                     <li><a href="{{ url_for('basic_strategy.index') }}">Basic Strategy</a></li>
                     <li><a href="{{ url_for('time_trial.index') }}">Time Trial</a></li>
             </ul></li>
+	    <li><a href="{{ url_for('misc_routes.faq') }}">FAQ</a></li>
             {% if current_user.is_anonymous %}
             <li><a href="{{ url_for('auth.login') }}">Login</a></li>
             {% else %}

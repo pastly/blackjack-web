@@ -1,0 +1,43 @@
+summary:focus {
+	outline-style: none;
+}
+
+table td {
+	color: var(--color-bg);
+	padding: 3px;
+	font-size: small;
+}
+
+#two_cards {
+	display: grid;
+	grid-template-columns: auto auto;
+	grid-template-rows: auto;
+	grid-template-areas:
+		"card1 card2";
+	justify-items: center;
+}
+
+#card1 {
+	grid-area: card1;
+}
+
+#card2 {
+	grid-area: card2;
+}
+
+#two_cards div:first-child {
+	padding-right: 1em;
+}
+
+/* max-width here needs to change if --width-content changes */
+@media screen and (max-width: 1080px) {
+	#two_cards {
+		display: grid;
+		grid-template-columns: auto;
+		grid-template-rows: auto auto;
+		grid-template-areas:
+			"card1"
+			"card2";
+		justify-items: center;
+	}
+}

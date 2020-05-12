@@ -20,6 +20,7 @@
     --width-card: 285px;
     --width-card-medium: 460px;
     --width-card-wide: 800px;
+    /* If this changes, update @media max-width in faq.css too */
     --width-content: 1080px;
 }
 
