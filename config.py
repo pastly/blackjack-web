@@ -17,7 +17,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'mNTYdSyk7278xjVku8WSactJ'
     SQLALCHEMY_DATABASE_URI = postgres_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    GOOGLE_ANALYTICS = os.environ.get('GOOGLE_ANALYTICS') or None
+    ANALYTICS = os.environ.get('ANALYTICS') or False
     # fallback to hashids default alphabet
     HASHIDS_ALPHABET = os.environ.get('HASHIDS_ALPHABET') or 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'  # noqa: E501
     HASHIDS_SALT = os.environ.get('HASHIDS_SALT') or 'F2sbGPMXbLAU5PXQFFvWsthB'
