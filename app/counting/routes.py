@@ -11,8 +11,9 @@ from .. import db
 DEFAULT_PREFS = {
     'num_decks': 1,
     'num_cards': 52,
-    'interval': 700,
     'cards_at_a_time': 1,
+    'method': 'interval',
+    'interval': 700,
 }
 
 
@@ -24,9 +25,15 @@ def index():
 
 
 def prefs_seem_valid(prefs):
-    # All prefs are ints at this time. So make sure we were given all ints
+    # All prefs are ints except key="method" at this time, which is a string.
+    # So make sure we were given correct things
     for k, v in prefs.items():
-        if not isinstance(v, int):
+        if k == 'method' and isinstance(v, str):
+            continue
+        elif k != 'method' and isinstance(v, int):
+            continue
+        else:
+            print(k, v)
             return False
     return True
 

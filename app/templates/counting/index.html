@@ -15,6 +15,31 @@
     async function run() {
     await init();
     }
+    window.which_train_method = function() {
+        let elms = ["train_method_interval", "train_method_manual"];
+        for (const elm_id of elms) {
+            let elm = document.getElementById(elm_id);
+            if (elm.checked) {
+                return elm.value;
+            }
+        }
+        return null;
+    };
+    window.update_displayed_options_fields = function() {
+        let get_elm = document.getElementById;
+        let train_method = which_train_method();
+        if (!train_method) {
+            // no method selected, so hide all method-specific options
+            document.getElementById("interval").classList.add("hide");
+            document.getElementById("interval_label").classList.add("hide");
+        } else if (train_method == "interval") {
+            document.getElementById("interval").classList.remove("hide");
+            document.getElementById("interval_label").classList.remove("hide");
+        } else if (train_method == "manual") {
+            document.getElementById("interval").classList.add("hide");
+            document.getElementById("interval_label").classList.add("hide");
+        }
+    };
     window.on_button = function(button_name) {
         if (button_name == "start") {
             // get the options from the form
@@ -28,13 +53,16 @@
                 document.getElementById("cards_at_a_time").value);
             let interval = parseInt(
                 document.getElementById("interval").value);
+            let train_method = which_train_method();
             // upload them to the server
             let data = {
                 'num_decks': num_decks,
                 'num_cards': num_cards,
-                'interval': interval,
                 'cards_at_a_time': cards_at_a_time,
+                'method': train_method,
+                'interval': interval,
             };
+            console.log("Will upload: ", data);
             let req = new XMLHttpRequest();
             req.addEventListener("error", function(e) {
                 flash_error_message("Error uploading options");
@@ -94,14 +122,20 @@
             console.log(req);
         });
         req.addEventListener("load", function(e) {
-            //let play_stats = req.response['play_stats'];
-            //let streak = req.response['streak'];
-            //statistics_into_state(play_stats, streak);
             console.log(req.response);
             document.getElementById("num_decks").value = req.response["num_decks"];
             document.getElementById("num_cards").value = req.response["num_cards"];
             document.getElementById("interval").value = req.response["interval"];
             document.getElementById("cards_at_a_time").value = req.response["cards_at_a_time"];
+            let train_method = req.response["method"];
+            if (train_method == "interval") {
+                document.getElementById("train_method_interval").checked = true;
+            } else if (train_method == "manual") {
+                document.getElementById("train_method_manual").checked = true;
+            } else {
+                console.log("Unknown training method: " + train_method);
+            }
+            update_displayed_options_fields();
         });
         req.open("GET", "{{ url_for('counting.prefs') }}", true);
         req.responseType = "json";
@@ -135,15 +169,32 @@
 <div id=count></div>
 <div id=options>
     <form>
+        <!-- num decks -->
         <label for=num_decks>Number of decks</label>
         <input type=number id=num_decks value=1 min=1 max=8>
+        <br/>
+        <!-- num cards -->
         <label for=num_cards>Number of cards to draw</label>
         <input type=number id=num_cards value=52 min=1>
-        <label for=interval>Interval between cards (ms)</label>
-        <input type=number id=interval value=1000 min=1 max=10000>
+        <br/>
+        <!-- cards at a time -->
         <label for=cards_at_a_time>Number of cards at a time</label>
         <input type=number id=cards_at_a_time value=1 min=1 max=10>
+        <br/>
+        <!-- training method -->
+        <i>Training Method:</i>
+            <label for=train_method_interval>Interval</label>
+            <input type=radio onChange='update_displayed_options_fields();' id=train_method_interval name=train_method value=interval>
+            <label for=train_method_manual>Manual</label>
+            <input type=radio onChange='update_displayed_options_fields();' id=train_method_manual name=train_method value=manual>
+        <br/>
+        <!-- interval (if training method "interval") -->
+        <label id=interval_label for=interval>Interval between cards (ms)</label>
+        <input type=number id=interval value=1000 min=1 max=10000>
+        <br/>
+        <!-- start button -->
         <a id=button_start onClick='on_button("start")'><i>Start</i></a>
+        <br/>
     </form>
 </div> <!-- options -->
 <div class=card id=cards></div>

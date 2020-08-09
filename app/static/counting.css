@@ -3,3 +3,7 @@
     line-height: var(--line-height);
     font-family: "DejaVu Sans";
 }
+
+label, input {
+    display: inline-block;
+}
