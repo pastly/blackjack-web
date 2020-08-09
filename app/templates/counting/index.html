@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link href=/static/global.css rel=stylesheet>
+<link href=/static/counting.css rel=stylesheet>
+{% endblock %}
+{% block content %}
+{% set wasm_bin, wasm_js = wasm_urls('counting') %}
+<!-- Note the usage of `type=module` here as this is an ES6 module -->
+<script type="module">
+    import init, {
+        current_count,
+        display_next_card,
+        rust_init,
+    } from '{{ wasm_js }}';
+    async function run() {
+    await init();
+    }
+    run();
+    window.on_button = function(button_name) {
+        if (button_name == "start") {
+            let num_decks_elm = document.getElementById("num_decks");
+            let num_cards_elm = document.getElementById("num_cards");
+            let num_decks = parseInt(
+                document.getElementById("num_decks").value);
+            let num_cards = parseInt(
+                document.getElementById("num_cards").value);
+            let cards_at_a_time = parseInt(
+                document.getElementById("cards_at_a_time").value);
+            let interval = parseInt(
+                document.getElementById("interval").value);
+            let result = rust_init(num_decks, num_cards, cards_at_a_time);
+            if (!result) {
+                console.log("Could not init rust stuff");
+                return;
+            }
+            document.getElementById("options").classList.add("hide");
+            document.getElementById("count").classList.add("hide");
+            document.getElementById("cards").classList.remove("hide");
+            let new_card_interval = 0;
+            window.clearInterval(new_card_interval);
+            new_card_interval = window.setInterval(() => {
+                if (!display_next_card()) {
+                    window.clearInterval(new_card_interval);
+                    let count_elm = document.getElementById("count");
+                    let cards_elm = document.getElementById("cards");
+                    count_elm.innerText = "Final running count: " + current_count();
+                    count_elm.classList.remove("hide");
+                    cards_elm.innerText = " ";
+                    cards.classList.add("hide");
+                    document.getElementById("options").classList.remove("hide");
+                }
+            }, interval);
+        } else {
+            console.log("Unknown button name", button_name);
+            return;
+        }
+    };
+</script>
+<span id=count></span>
+<div id=options>
+    <form>
+        <label for=num_decks>Number of decks</label>
+        <input type=number id=num_decks value=1 min=1 max=8>
+        <label for=num_cards>Number of cards to draw</label>
+        <input type=number id=num_cards value=52 min=1>
+        <label for=interval>Interval between cards (ms)</label>
+        <input type=number id=interval value=1000 min=1 max=10000>
+        <label for=cards_at_a_time>Number of cards at a time</label>
+        <input type=number id=cards_at_a_time value=1 min=1 max=10>
+        <a id=button_start onClick='on_button("start")'><i>Start</i></a>
+    </form>
+</div> <!-- options -->
+<span class=error id=error></span>
+<span class=card id=cards></span>
+{% endblock %}
