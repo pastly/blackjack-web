@@ -6,4 +6,4 @@ db_port=5432
 
 local_port=5555
 
-ssh -NL $local_port:$db_host:$db_port $jump_host
+ssh -vNL $local_port:$db_host:$db_port $jump_host
