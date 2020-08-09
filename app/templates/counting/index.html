@@ -15,9 +15,9 @@
     async function run() {
     await init();
     }
-    run();
     window.on_button = function(button_name) {
         if (button_name == "start") {
+            // get the options from the form
             let num_decks_elm = document.getElementById("num_decks");
             let num_cards_elm = document.getElementById("num_cards");
             let num_decks = parseInt(
@@ -28,14 +28,42 @@
                 document.getElementById("cards_at_a_time").value);
             let interval = parseInt(
                 document.getElementById("interval").value);
+            // upload them to the server
+            let data = {
+                'num_decks': num_decks,
+                'num_cards': num_cards,
+                'interval': interval,
+                'cards_at_a_time': cards_at_a_time,
+            };
+            let req = new XMLHttpRequest();
+            req.addEventListener("error", function(e) {
+                flash_error_message("Error uploading options");
+            });
+            req.addEventListener("abort", function(e) {
+                flash_error_message("Aborted upload of options");
+            });
+            req.addEventListener("load", function(e) {
+                if (req.status >= 200 && req.status < 300) {
+                    //flash_error_message("Uploaded latest options :)");
+                } else {
+                    flash_error_message("Problem uploading latest options");
+                    console.log(req);
+                }
+            });
+            req.open("POST", "{{ url_for('counting.prefs') }}", true);
+            req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            req.send(JSON.stringify(data));
+            // init rust stuff
             let result = rust_init(num_decks, num_cards, cards_at_a_time);
             if (!result) {
                 console.log("Could not init rust stuff");
                 return;
             }
+            // update display
             document.getElementById("options").classList.add("hide");
             document.getElementById("count").classList.add("hide");
             document.getElementById("cards").classList.remove("hide");
+            // start showing cards
             let new_card_interval = 0;
             window.clearInterval(new_card_interval);
             new_card_interval = window.setInterval(() => {
@@ -55,8 +83,56 @@
             return;
         }
     };
+    window.get_and_apply_preferences = function() {
+        let req = new XMLHttpRequest();
+        req.addEventListener("error", function(e) {
+            flash_error_message("Error fetching saved options");
+            console.log(req);
+        });
+        req.addEventListener("abort", function(e) {
+            flash_error_message("Aborted fetching saved options");
+            console.log(req);
+        });
+        req.addEventListener("load", function(e) {
+            //let play_stats = req.response['play_stats'];
+            //let streak = req.response['streak'];
+            //statistics_into_state(play_stats, streak);
+            console.log(req.response);
+            document.getElementById("num_decks").value = req.response["num_decks"];
+            document.getElementById("num_cards").value = req.response["num_cards"];
+            document.getElementById("interval").value = req.response["interval"];
+            document.getElementById("cards_at_a_time").value = req.response["cards_at_a_time"];
+        });
+        req.open("GET", "{{ url_for('counting.prefs') }}", true);
+        req.responseType = "json";
+        req.send();
+    };
+    let flash_error_message_fade_interval = 0;
+    let flash_error_message_update_every_ms = 50;
+    let flash_error_message_duration_ms = 3000;
+    window.flash_error_message = function(msg) {
+        let elm = document.getElementById("error");
+        elm.textContent = msg;
+        // clean up from existing fading, if any
+        window.clearInterval(flash_error_message_fade_interval);
+        flash_error_message_fade_interval = 0;
+        // start new fading
+        let opacity = 1; // initial
+        elm.style.opacity = opacity;
+        flash_error_message_fade_interval = window.setInterval(() => {
+            opacity -= flash_error_message_update_every_ms / flash_error_message_duration_ms;
+            elm.style.opacity = opacity;
+            if (opacity <= 0) {
+                window.clearInterval(flash_error_message_fade_interval);
+                flash_error_message_fade_interval = 0;
+            }
+        }, flash_error_message_update_every_ms);
+    };
+    run();
+    get_and_apply_preferences();
 </script>
-<span id=count></span>
+<div class=error id=error></div>
+<div id=count></div>
 <div id=options>
     <form>
         <label for=num_decks>Number of decks</label>
@@ -70,6 +146,5 @@
         <a id=button_start onClick='on_button("start")'><i>Start</i></a>
     </form>
 </div> <!-- options -->
-<span class=error id=error></span>
-<span class=card id=cards></span>
+<div class=card id=cards></div>
 {% endblock %}

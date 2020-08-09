@@ -87,3 +87,9 @@ class TimeTrialResult(db.Model):
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     timestamp = db.Column(db.DateTime, server_default=utcnow(), nullable=False)
     hands = db.Column(GzippedBytes(length=25*1024), nullable=False)
+
+
+class CountingPrefs(db.Model):
+    user_id = db.Column(
+        db.ForeignKey('user.id'), nullable=False, primary_key=True)
+    prefs = db.Column(GzippedBytes(length=1*1024), nullable=False)
