@@ -44,7 +44,24 @@
             document.getElementById("interval_label").classList.add("hide");
         }
     };
+    let animation_is_increasing = true;
+    window.update_animation = function() {
+        let elm = document.getElementById("animation");
+        if (animation_is_increasing && elm.innerText.length == 5) {
+            animation_is_increasing = false;
+            elm.innerText = elm.innerText.substring(0, elm.innerText.length - 1);
+        } else if (!animation_is_increasing && elm.innerText == 0) {
+            animation_is_increasing = true;
+            elm.innerText += "*";
+        } else if (animation_is_increasing) {
+            elm.innerText += "*";
+        } else {
+            elm.innerText = elm.innerText.substring(0, elm.innerText.length - 1);
+        }
+    };
     window.do_next_card = function() {
+        update_animation();
+        let animation_elm = document.getElementById("animation");
         if (!display_next_card()) {
             window.clearInterval(new_card_interval);
             let count_elm = document.getElementById("count");
@@ -56,8 +73,11 @@
             count_elm.classList.remove("hide");
             cards_elm.innerText = " ";
             cards.classList.add("hide");
+            animation_elm.innerText = "";
+            animation_elm.classList.add("hide");
             document.getElementById("options").classList.remove("hide");
             document.getElementById("button_next").classList.add("hide");
+            document.getElementById("animation").classList.add("hide");
             in_game = false;
         }
     };
@@ -111,6 +131,7 @@
         document.getElementById("options").classList.add("hide");
         document.getElementById("count").classList.add("hide");
         document.getElementById("cards").classList.remove("hide");
+        document.getElementById("animation").classList.remove("hide");
         if (which_train_method() == "manual") {
             document.getElementById("button_next").classList.remove("hide");
         } else {
@@ -208,6 +229,7 @@
 </script>
 <div class=error id=error></div>
 <p id=count></p>
+<p id=animation></p>
 <div id=options>
     <form>
         <!-- num decks -->

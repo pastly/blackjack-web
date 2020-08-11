@@ -11,3 +11,8 @@ label, input {
 #count {
     font-size: 200%;
 }
+
+#animation {
+    height: 10px;
+    font-size: 150%;
+}
