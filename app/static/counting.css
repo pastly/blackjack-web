@@ -7,3 +7,7 @@
 label, input {
     display: inline-block;
 }
+
+#count {
+    font-size: 200%;
+}
