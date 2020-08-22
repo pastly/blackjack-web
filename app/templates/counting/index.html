@@ -11,10 +11,13 @@
         current_count,
         display_next_card,
         game_duration,
+        get_ls_preferences,
         rust_init,
+        set_ls_preferences,
     } from '{{ wasm_js }}';
     async function run() {
         await init();
+        get_and_apply_preferences();
     }
     let in_game = false;
     // event id for showing new cards when "interval" training mode is used
@@ -93,15 +96,17 @@
             document.getElementById("cards_at_a_time").value);
         let interval = parseInt(
             document.getElementById("interval").value);
-        let train_method = which_train_method();
-        // upload the options to the server
+        // create a "preference object"
         let data = {
             'num_decks': num_decks,
             'num_cards': num_cards,
             'cards_at_a_time': cards_at_a_time,
-            'method': train_method,
+            'method': which_train_method(),
             'interval': interval,
         };
+        // store latest prefs in local storage
+        set_ls_preferences(JSON.stringify(data));
+        // upload the options to the server
         console.log("Uploading options: ", data);
         let req = new XMLHttpRequest();
         req.addEventListener("error", function(e) {
@@ -171,6 +176,30 @@
         }
     };
     window.get_and_apply_preferences = function() {
+        function apply(prefs) {
+            document.getElementById("num_decks").value = prefs["num_decks"];
+            document.getElementById("num_cards").value = prefs["num_cards"];
+            document.getElementById("interval").value = prefs["interval"];
+            document.getElementById("cards_at_a_time").value = prefs["cards_at_a_time"];
+            let train_method = prefs["method"];
+            if (train_method == "interval") {
+                document.getElementById("train_method_interval").checked = true;
+            } else if (train_method == "manual") {
+                document.getElementById("train_method_manual").checked = true;
+            } else {
+                console.log("Unknown training method: " + train_method);
+            }
+            update_displayed_options_fields();
+        }
+        // first get preferences from local storage, if possible
+        let local_prefs = get_ls_preferences();
+        if (local_prefs == "{}") {
+            console.log("No local prefs to apply");
+        } else {
+            console.log("Yes have local prefs. Applying first.");
+            apply(JSON.parse(local_prefs));
+        }
+        // then get latest from server, and on success, use them instead
         let req = new XMLHttpRequest();
         req.addEventListener("error", function(e) {
             flash_error_message("Error fetching saved options");
@@ -182,19 +211,7 @@
         });
         req.addEventListener("load", function(e) {
             console.log(req.response);
-            document.getElementById("num_decks").value = req.response["num_decks"];
-            document.getElementById("num_cards").value = req.response["num_cards"];
-            document.getElementById("interval").value = req.response["interval"];
-            document.getElementById("cards_at_a_time").value = req.response["cards_at_a_time"];
-            let train_method = req.response["method"];
-            if (train_method == "interval") {
-                document.getElementById("train_method_interval").checked = true;
-            } else if (train_method == "manual") {
-                document.getElementById("train_method_manual").checked = true;
-            } else {
-                console.log("Unknown training method: " + train_method);
-            }
-            update_displayed_options_fields();
+            apply(req.response);
         });
         req.open("GET", "{{ url_for('counting.prefs') }}", true);
         req.responseType = "json";
@@ -225,7 +242,6 @@
         on_button("next");
     });
     run();
-    get_and_apply_preferences();
 </script>
 <div class=error id=error></div>
 <p id=count></p>
