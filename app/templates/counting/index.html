@@ -20,8 +20,12 @@
         get_and_apply_preferences();
     }
     let in_game = false;
-    // event id for showing new cards when "interval" training mode is used
-    let new_card_interval = 0;
+    // event id for timeout during flashing card to user in "interval" training mode
+    let card_flash_timeout_id = 0;
+    // True if the next time the card flashing timeout expires we should HIDE
+    // the card, false if next time it expires we should change the card and
+    // SHOW it.
+    let card_flash_next_is_hide = false;
     window.which_train_method = function() {
         let elms = ["train_method_interval", "train_method_manual"];
         for (const elm_id of elms) {
@@ -39,12 +43,18 @@
             // no method selected, so hide all method-specific options
             document.getElementById("interval").classList.add("hide");
             document.getElementById("interval_label").classList.add("hide");
+            document.getElementById("flash").classList.add("hide");
+            document.getElementById("flash_label").classList.add("hide");
         } else if (train_method == "interval") {
             document.getElementById("interval").classList.remove("hide");
             document.getElementById("interval_label").classList.remove("hide");
+            document.getElementById("flash").classList.remove("hide");
+            document.getElementById("flash_label").classList.remove("hide");
         } else if (train_method == "manual") {
             document.getElementById("interval").classList.add("hide");
             document.getElementById("interval_label").classList.add("hide");
+            document.getElementById("flash").classList.add("hide");
+            document.getElementById("flash_label").classList.add("hide");
         }
     };
     let animation_is_increasing = true;
@@ -62,11 +72,37 @@
             elm.innerText = elm.innerText.substring(0, elm.innerText.length - 1);
         }
     };
-    window.do_next_card = function() {
-        update_animation();
-        let animation_elm = document.getElementById("animation");
-        if (!display_next_card()) {
-            window.clearInterval(new_card_interval);
+    window.show_next_card = function() {
+        window.clearTimeout(card_flash_timeout_id);
+        let interval = parseInt(document.getElementById("interval").value);
+        let flash = parseInt(document.getElementById("flash").value);
+        let method = which_train_method();
+        if (method == "interval" && card_flash_next_is_hide && flash != interval) {
+            // Go into this block if the card is being shown and it needs to be
+            // hidden now, next time we get called we should change the card and
+            // show it again
+            document.getElementById("cards").classList.add("hide");
+            let hide_time = interval - flash;
+            card_flash_timeout_id = window.setTimeout(() => {
+                show_next_card();
+            }, hide_time);
+            card_flash_next_is_hide = false;
+            return;
+        }
+        // The card is currently hidden. Try to display a new card. If we
+        // succeed, then start the timeout for hiding it next time around. If we
+        // fail, then we must be done and should do cleanup.
+        if (display_next_card()) {
+            update_animation();
+            if (method == "interval") {
+                document.getElementById("cards").classList.remove("hide");
+                card_flash_next_is_hide = true;
+                card_flash_timeout_id = window.setTimeout(() => {
+                    show_next_card();
+                }, flash);
+            }
+        } else {
+            let animation_elm = document.getElementById("animation");
             let count_elm = document.getElementById("count");
             let cards_elm = document.getElementById("cards");
             count_elm.innerText = "Final running count: " + current_count();
@@ -88,8 +124,9 @@
         let num_cards = data["num_cards"];
         let num_decks = data["num_decks"];
         let cards_at_a_time = data["cards_at_a_time"];
-        let interval = data["interval"];
         let method = data["method"];
+        let interval = data["interval"];
+        let flash = data["flash"];
         if (num_cards > num_decks * 52) {
             flash_form_error_message(num_cards + " cards > " + num_decks + " decks");
             return false;
@@ -107,6 +144,12 @@
             return false;
         } else if (interval < 1) {
             flash_form_error_message("interval < 1");
+            return false;
+        } else if (flash < 1) {
+            flash_form_error_message("flash < 1");
+            return false;
+        } else if (flash > interval) {
+            flash_form_error_message("flash > interval");
             return false;
         } else if (!method) {
             flash_form_error_message("invalid train method");
@@ -126,6 +169,8 @@
             document.getElementById("cards_at_a_time").value);
         let interval = parseInt(
             document.getElementById("interval").value);
+        let flash = parseInt(
+            document.getElementById("flash").value);
         // create a "preference object"
         let data = {
             'num_decks': num_decks,
@@ -133,6 +178,7 @@
             'cards_at_a_time': cards_at_a_time,
             'method': which_train_method(),
             'interval': interval,
+            'flash': flash,
         };
         if (!valid_form_data(data)) {
             return;
@@ -175,16 +221,17 @@
         } else {
             document.getElementById("button_next").classList.add("hide");
         }
-        // set game flag
+        // set game flags
         in_game = true;
+        card_flash_next_is_hide = true;
         // start showing cards
         if (which_train_method() == "interval") {
-            window.clearInterval(new_card_interval);
-            new_card_interval = window.setInterval(() => {
-                do_next_card();
-            }, interval);
+            window.clearTimeout(card_flash_timeout_id);
+            card_flash_timeout_id = window.setTimeout(() => {
+                show_next_card();
+            }, flash);
         } else if (which_train_method() == "manual") {
-                do_next_card();
+                show_next_card();
         } else {
             console.log(
                 "Unknown training method '" + which_train_method() +
@@ -196,7 +243,7 @@
         if (!in_game) {
             return;
         }
-        do_next_card();
+        show_next_card();
     };
     window.on_button = function(button_name) {
         if (button_name == "start") {
@@ -213,6 +260,7 @@
             document.getElementById("num_decks").value = prefs["num_decks"];
             document.getElementById("num_cards").value = prefs["num_cards"];
             document.getElementById("interval").value = prefs["interval"];
+            document.getElementById("flash").value = prefs["flash"];
             document.getElementById("cards_at_a_time").value = prefs["cards_at_a_time"];
             let train_method = prefs["method"];
             if (train_method == "interval") {
@@ -321,6 +369,10 @@
             <input type=radio onChange='update_displayed_options_fields();' id=train_method_interval name=train_method value=interval>
             <label for=train_method_manual>Manual</label>
             <input type=radio onChange='update_displayed_options_fields();' id=train_method_manual name=train_method value=manual>
+        <br/>
+        <!-- flash time (if training method "interval") -->
+        <label id=flash_label for=flash>Time each card shown (ms)</label>
+        <input type=number id=flash value=1000 min=1 max=10000>
         <br/>
         <!-- interval (if training method "interval") -->
         <label id=interval_label for=interval>Interval between cards (ms)</label>
