@@ -171,4 +171,6 @@ function on_button_action(action) {
     next();
 }
 
-window.onload = next;
+window.addEventListener("load", function() {
+    next();
+});
