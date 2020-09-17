@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link href=/static/global.css rel=stylesheet>
+<link href=/static/deviations.css rel=stylesheet>
+{% endblock %}
+{% block content %}
+True Count: <span id=true_count></span><br/>
+Player:<br/>
+<span class=card id=player_cards></span><br/>
+Dealer:<br/>
+<span class=card id=dealer_cards></span><br/>
+<span id=hint></span><br/>
+<div id=buttons>
+<!-- <a id=button_next onClick='on_button("next"); return false;'/><b>Next</b></a> -->
+<a id=button_hit onClick='on_button("hit"); return false;'/><b>Hit</b></a>
+<a id=button_stand onClick='on_button("stand"); return false;'/><b>Stand</b></a>
+<a id=button_double onClick='on_button("double"); return false;'/><b>Double</b></a>
+<a id=button_split onClick='on_button("split"); return false;'/><b>Split</b></a>
+<!-- <a id=button_surrender onClick='on_button("surrender"); return false;'/><b>Surrender</b></a> -->
+</div> <!-- buttons -->
+<div id=options>
+    <form>
+        <!-- min/max true count presented -->
+        <label for=min_tc>Minimum TC</label>
+        <input type=number id=min_tc value=-10 min=-20 max=20>
+        <label for=max_tc>Maximum TC</label>
+        <input type=number id=max_tc value=10 min=-20 max=20>
+    </form>
+</div> <!-- options -->
+<script src='/static/deviations.js'></script>
+{% endblock %}
